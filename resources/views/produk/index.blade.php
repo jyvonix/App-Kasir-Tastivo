@@ -1,34 +1,70 @@
 <x-app-layout>
     <head>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
-            body { font-family: 'Outfit', sans-serif; }
+            body { font-family: 'Outfit', sans-serif; background-color: #F8FAFC; overflow-x: hidden; }
+            
+            /* --- 1. BACKGROUND SYSTEM --- */
+            .mesh-background {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+                background-color: #F1F5F9;
+                background-image: 
+                    radial-gradient(at 0% 0%, hsla(25, 100%, 88%, 1) 0, transparent 50%), 
+                    radial-gradient(at 100% 0%, hsla(210, 100%, 96%, 1) 0, transparent 50%);
+            }
+
+            /* --- 2. GLASS CARD ROW --- */
+            .produk-card {
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.6);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+                transition: all 0.3s ease;
+            }
+            .produk-card:hover {
+                transform: translateY(-2px);
+                background: rgba(255, 255, 255, 1);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+                border-color: rgba(249, 115, 22, 0.3);
+            }
         </style>
     </head>
 
-    <div class="space-y-8 animate-fade-in-up">
+    <div class="mesh-background"></div>
+
+    <div class="relative w-full space-y-12 animate-fade-in-up">
         
+        {{-- Background Decoration --}}
+        <div class="absolute inset-0 -z-10 bg-gradient-to-br from-orange-50 via-white to-orange-50/50 rounded-3xl"></div>
+
         <!-- HEADER & ACTIONS -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-                <h1 class="text-3xl font-black text-gray-900 tracking-tight">Katalog Produk</h1>
-                <p class="text-gray-500 font-medium mt-1">Kelola menu dan ketersediaan stok restoran Anda.</p>
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
+            <div class="space-y-1">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="w-8 h-[2px] bg-[#FF6B35] rounded-full"></span>
+                    <span class="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">Inventory Management</span>
+                </div>
+                <h1 class="text-4xl lg:text-5xl text-gray-900 tracking-tight leading-tight">
+                    <span class="font-medium">Manajemen</span>
+                    <span class="font-light text-gray-400">Produk</span>
+                </h1>
+                <p class="text-gray-400 font-medium tracking-wide pt-2">Kelola menu dan ketersediaan stok TASTIVO.</p>
             </div>
             
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                 <!-- Search Bar -->
-                <form action="{{ route('produk.index') }}" method="GET" class="relative group">
-                    <input type="text" name="search" value="{{ request('search') }}" 
-                           placeholder="Cari menu..." 
-                           class="pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl w-full md:w-64 focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all font-bold text-sm shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-orange-500 transition-colors">
+                <form action="{{ route('produk.index') }}" method="GET" class="relative group w-full lg:w-[320px]">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#FF6B35] transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                           placeholder="Cari menu..." 
+                           class="block w-full pl-12 pr-12 py-3 bg-white border border-gray-100 rounded-xl text-gray-800 shadow-sm focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:outline-none transition-all font-semibold placeholder-gray-400">
                 </form>
 
-                <a href="{{ route('produk.create') }}" class="px-6 py-3.5 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-500 hover:shadow-xl hover:shadow-orange-500/20 transition-all flex items-center gap-2 group">
-                    <svg class="w-4 h-4 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                <a href="{{ route('produk.create') }}" class="inline-flex items-center justify-center px-6 py-3 bg-gray-900 hover:bg-[#FF6B35] text-white font-bold rounded-xl shadow-lg hover:shadow-orange-200 transition-all transform hover:-translate-y-0.5 whitespace-nowrap">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Tambah Produk
                 </a>
             </div>
