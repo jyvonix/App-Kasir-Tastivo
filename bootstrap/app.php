@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        
+        // =================================================================
+        // DAFTARKAN ALIAS MIDDLEWARE DI SINI (SATU BLOK SAJA)
+        // =================================================================
+        
+        $middleware->alias([
+            // Ini menghubungkan kata kunci 'role' di route dengan file CheckRole.php
+            'role' => \App\Http\Middleware\CheckRole::class,
+        ]);
+
+        // Jika nanti ada middleware lain, tambahkan di array ini juga.
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
