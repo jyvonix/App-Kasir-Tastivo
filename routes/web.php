@@ -67,6 +67,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         return redirect()->route('kategori.index')->with('error', 'Tabel kategori sudah ada isinya.');
     });
 
+    // [TEMP] Route untuk isi user otomatis (Akses: /seed-users)
+    Route::get('/seed-users', function() {
+        if (\App\Models\User::count() <= 1) { // Jika hanya ada 1 user (admin yg sedang login) atau 0
+            Artisan::call('db:seed', ['--class' => 'UserSeeder']);
+            return "Akun Default (Admin, Kasir, Owner) berhasil ditambahkan!";
+        }
+        return "Gagal: Tabel User sudah ada isinya.";
+    });
+
     // [TEMP] Route untuk update database (Akses: /run-migrate)
     Route::get('/run-migrate', function() {
         Artisan::call('migrate', ['--force' => true]);
