@@ -36,8 +36,11 @@ class PromoController extends Controller
             'tipe' => 'required|in:persen,nominal',
             'nilai' => 'required|numeric|min:0',
             'minimum_belanja' => 'nullable|numeric|min:0',
-            'limit_type' => 'required|in:unlimited,limited', // Form Helper
-            'batas_pemakaian' => 'nullable|numeric|min:1',
+            'maksimum_potongan' => 'nullable|numeric|min:0',
+            'limit_type' => 'required|in:unlimited,limited',
+            'batas_pemakaian' => 'required_if:limit_type,limited|nullable|numeric|min:1',
+            'mulai_berlaku' => 'nullable|date',
+            'berakhir_pada' => 'nullable|date|after_or_equal:mulai_berlaku',
         ]);
 
         $data = $request->all();
@@ -49,7 +52,7 @@ class PromoController extends Controller
 
         Promo::create($data);
 
-        return redirect()->route('promo.index')->with('success', 'Kode Promo berhasil dibuat!');
+        return redirect()->route('promo.index')->with('success', 'Kode Promo ' . $request->kode . ' berhasil dibuat!');
     }
 
     /**
@@ -61,7 +64,12 @@ class PromoController extends Controller
             'kode' => 'required|uppercase|alpha_num|unique:promos,kode,' . $promo->id,
             'tipe' => 'required|in:persen,nominal',
             'nilai' => 'required|numeric|min:0',
+            'minimum_belanja' => 'nullable|numeric|min:0',
+            'maksimum_potongan' => 'nullable|numeric|min:0',
             'limit_type' => 'required|in:unlimited,limited',
+            'batas_pemakaian' => 'required_if:limit_type,limited|nullable|numeric|min:1',
+            'mulai_berlaku' => 'nullable|date',
+            'berakhir_pada' => 'nullable|date|after_or_equal:mulai_berlaku',
         ]);
 
         $data = $request->all();
@@ -73,7 +81,7 @@ class PromoController extends Controller
 
         $promo->update($data);
 
-        return redirect()->route('promo.index')->with('success', 'Promo diperbarui.');
+        return redirect()->route('promo.index')->with('success', 'Promo ' . $promo->kode . ' berhasil diperbarui.');
     }
 
     /**

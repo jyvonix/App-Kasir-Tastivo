@@ -227,11 +227,38 @@
                         @csrf
                         <div id="methodField"></div>
 
-                        <!-- KODE -->
-                        <div>
-                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Voucher Code</label>
-                            <input type="text" name="kode" id="inputKode" required 
-                                class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl font-black text-xl uppercase tracking-widest placeholder-gray-300 focus:ring-4 focus:ring-orange-100 transition-all text-center" placeholder="GAJIANHOKI">
+                        @if ($errors->any())
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-2xl">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-bold text-red-700 uppercase tracking-wider">Perbaiki Kesalahan Berikut:</p>
+                                    <ul class="mt-1 list-disc list-inside text-xs text-red-600 font-medium">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- NAMA & KODE -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Voucher Name</label>
+                                <input type="text" name="nama_promo" id="inputNama" value="{{ old('nama_promo') }}"
+                                    class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl font-bold text-gray-700 placeholder-gray-300 focus:ring-4 focus:ring-orange-100 transition-all" placeholder="Diskon Akhir Tahun">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Voucher Code</label>
+                                <input type="text" name="kode" id="inputKode" value="{{ old('kode') }}" required 
+                                    class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl font-black text-xl uppercase tracking-widest placeholder-gray-300 focus:ring-4 focus:ring-orange-100 transition-all text-center" placeholder="GAJIANHOKI">
+                            </div>
                         </div>
 
                         <!-- TIPE & NILAI -->
@@ -240,15 +267,15 @@
                                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Discount Type</label>
                                 <select name="tipe" id="inputTipe" onchange="toggleTipe()" 
                                     class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl font-bold text-gray-700 focus:ring-4 focus:ring-orange-100 appearance-none cursor-pointer">
-                                    <option value="persen">Percentage (%)</option>
-                                    <option value="nominal">Fixed Amount (Rp)</option>
+                                    <option value="persen" {{ old('tipe') == 'persen' ? 'selected' : '' }}>Percentage (%)</option>
+                                    <option value="nominal" {{ old('tipe') == 'nominal' ? 'selected' : '' }}>Fixed Amount (Rp)</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Discount Value</label>
                                 <div class="relative">
                                     <span id="prefixNilai" class="absolute left-6 top-4 text-gray-400 font-black text-lg">%</span>
-                                    <input type="number" name="nilai" id="inputNilai" required 
+                                    <input type="number" name="nilai" id="inputNilai" value="{{ old('nilai') }}" required 
                                         class="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl font-black text-gray-900 focus:ring-4 focus:ring-orange-100 transition-all" placeholder="15">
                                 </div>
                             </div>
@@ -286,12 +313,12 @@
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Min. Purchase</label>
                                         <input type="number" name="minimum_belanja" id="inputMinBelanja" 
-                                            class="w-full px-4 py-3 bg-white border-none rounded-xl font-bold text-gray-800 focus:ring-4 focus:ring-orange-200" value="0">
+                                            class="w-full px-4 py-3 bg-white border-none rounded-xl font-bold text-gray-800 focus:ring-4 focus:ring-orange-200" value="{{ old('minimum_belanja', 0) }}">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Max. Discount</label>
                                         <input type="number" name="maksimum_potongan" id="inputMaxPotongan" 
-                                            class="w-full px-4 py-3 bg-white border-none rounded-xl font-bold text-gray-800 focus:ring-4 focus:ring-orange-200" placeholder="Optional">
+                                            class="w-full px-4 py-3 bg-white border-none rounded-xl font-bold text-gray-800 focus:ring-4 focus:ring-orange-200" value="{{ old('maksimum_potongan') }}" placeholder="Optional">
                                     </div>
                                 </div>
                             </div>
@@ -301,12 +328,12 @@
                         <div class="grid grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Start Date</label>
-                                <input type="date" name="mulai_berlaku" id="inputMulai" 
+                                <input type="date" name="mulai_berlaku" id="inputMulai" value="{{ old('mulai_berlaku') }}"
                                     class="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl font-bold text-gray-700 focus:ring-4 focus:ring-orange-100">
                             </div>
                             <div>
                                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">End Date</label>
-                                <input type="date" name="berakhir_pada" id="inputSelesai" 
+                                <input type="date" name="berakhir_pada" id="inputSelesai" value="{{ old('berakhir_pada') }}"
                                     class="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl font-bold text-gray-700 focus:ring-4 focus:ring-orange-100">
                             </div>
                         </div>
@@ -324,6 +351,19 @@
     </div>
 
     <script>
+        // Auto-reopen modal if validation errors exist
+        document.addEventListener('DOMContentLoaded', function() {
+            @if($errors->any())
+                @if(old('_method') == 'PUT')
+                    // Logic to reopen edit modal would be complex with old data, 
+                    // for now reopen as create with old values is better than nothing
+                    openModal('create');
+                @else
+                    openModal('create');
+                @endif
+            @endif
+        });
+
         function toggleTipe() {
             const tipe = document.getElementById('inputTipe').value;
             const prefix = document.getElementById('prefixNilai');
@@ -368,15 +408,18 @@
                 title.innerText = "New Voucher";
                 form.action = "{{ route('promo.store') }}";
                 methodField.innerHTML = '';
-                form.reset();
-                document.getElementById('toggleLimit').checked = false;
-                toggleLimitInput();
+                // Don't reset if we have errors, we want to keep old values
+                @if(!$errors->any())
+                    form.reset();
+                    document.getElementById('toggleLimit').checked = false;
+                    toggleLimitInput();
+                @endif
             } else {
                 title.innerText = "Update Voucher";
-                // Use the route directly if possible or construct it safely
                 form.action = "{{ url('promo') }}/" + data.id;
                 methodField.innerHTML = '<input type="hidden" name="_method" value="PUT">';
                 
+                document.getElementById('inputNama').value = data.nama_promo || '';
                 document.getElementById('inputKode').value = data.kode;
                 document.getElementById('inputTipe').value = data.tipe;
                 document.getElementById('inputNilai').value = data.nilai;
