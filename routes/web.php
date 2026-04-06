@@ -30,6 +30,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('produk', ProdukController::class);
+    Route::resource('kategori', \App\Http\Controllers\KategoriController::class);
+
+    // [TEMP] Route untuk isi kategori otomatis jika kosong (Akses: /seed-kategori)
+    Route::get('/seed-kategori', function() {
+        if (\App\Models\Kategori::count() === 0) {
+            Artisan::call('db:seed', ['--class' => 'KategoriSeeder']);
+            return redirect()->route('kategori.index')->with('success', '10 Kategori awal berhasil ditambahkan!');
+        }
+        return redirect()->route('kategori.index')->with('error', 'Tabel kategori sudah ada isinya.');
+    });
 
     // 7. Absensi (Dipindahkan ke Auth Umum agar Admin & Kasir bisa akses)
     Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
@@ -46,6 +56,17 @@ Route::middleware('auth')->group(function () {
 // ====================================================
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('pegawai', PegawaiController::class);
+    Route::resource('kategori', \App\Http\Controllers\KategoriController::class);
+    
+    // [TEMP] Route untuk isi kategori otomatis jika kosong (Akses: /seed-kategori)
+    Route::get('/seed-kategori', function() {
+        if (\App\Models\Kategori::count() === 0) {
+            Artisan::call('db:seed', ['--class' => 'KategoriSeeder']);
+            return redirect()->route('kategori.index')->with('success', '10 Kategori awal berhasil ditambahkan!');
+        }
+        return redirect()->route('kategori.index')->with('error', 'Tabel kategori sudah ada isinya.');
+    });
+
     Route::get('/pegawai/card/{id}', [App\Http\Controllers\AttendanceController::class, 'card'])->name('pegawai.card'); // New Card Printing Route
     
     // Routes Pengaturan Toko (PENTING)
