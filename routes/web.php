@@ -67,6 +67,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         return redirect()->route('kategori.index')->with('error', 'Tabel kategori sudah ada isinya.');
     });
 
+    // [TEMP] Route untuk update database (Akses: /run-migrate)
+    Route::get('/run-migrate', function() {
+        Artisan::call('migrate', ['--force' => true]);
+        return redirect()->route('kategori.index')->with('success', 'Struktur database berhasil diperbarui!');
+    });
+
     Route::get('/pegawai/card/{id}', [App\Http\Controllers\AttendanceController::class, 'card'])->name('pegawai.card'); // New Card Printing Route
     
     // Routes Pengaturan Toko (PENTING)
