@@ -29,6 +29,11 @@ Route::get('/seed-users', function() {
     return "Akun Admin, Kasir, dan Owner berhasil disinkronkan!";
 });
 
+Route::get('/seed-shift', function() {
+    Artisan::call('db:seed', ['--class' => 'ShiftSeeder']);
+    return "Jadwal Shift Pagi, Siang, Sore, dan Malam berhasil ditambahkan!";
+});
+
 Route::get('/clear-all', function() {
     Artisan::call('route:clear');
     Artisan::call('cache:clear');
@@ -67,6 +72,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('pegawai', PegawaiController::class);
     Route::resource('kategori', \App\Http\Controllers\KategoriController::class);
+    Route::resource('shifts', \App\Http\Controllers\ShiftController::class);
     Route::get('/pegawai/card/{id}', [App\Http\Controllers\AttendanceController::class, 'card'])->name('pegawai.card');
     
     Route::get('/pengaturan', [SettingController::class, 'index'])->name('pengaturan.index');
@@ -100,6 +106,8 @@ Route::middleware(['auth', 'role:owner'])->group(function () {
     Route::prefix('laporan')->name('laporan.')->group(function() {
         Route::get('/keuangan', [LaporanController::class, 'keuangan'])->name('keuangan');
         Route::get('/stok', [LaporanController::class, 'stok'])->name('stok');
+        Route::get('/export/excel', [LaporanController::class, 'exportExcel'])->name('export_excel');
+        Route::get('/export/pdf', [LaporanController::class, 'exportPdf'])->name('export_pdf');
     });
 });
 

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaksi;
 use App\Models\Produk;
+use App\Exports\KeuanganExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -94,6 +97,42 @@ class LaporanController extends Controller
             'startDate',
             'endDate'
         ));
+    }
+
+    public function exportExcel(Request $request) 
+    {
+        $startDate = $request->start_date ?? Carbon::now()->startOfMonth();
+        $endDate = $request->end_date ?? Carbon::now()->endOfMonth();
+        
+        $filename = 'Laporan_Keuangan_Tastivo_' . Carbon::parse($startDate)->format('dMY') . '_' . Carbon::parse($endDate)->format('dMY') . '.xlsx';
+        
+        return Excel::download(new KeuanganExport($startDate, $endDate), $filename);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfMonth();
+        
+        $validStatus = ['Lunas', 'success', 'paid', 'settlement'];
+
+        $query = Transaksi::whereBetween('tanggal', [$startDate, $endDate])
+            ->whereIn('status_pembayaran', $validStatus);
+
+        $pendapatanTotal = $query->sum('total_harga');
+        $totalTransaksi = $query->count();
+        $rataRataTransaksi = $totalTransaksi > 0 ? $pendapatanTotal / $totalTransaksi : 0;
+        
+        $riwayatTransaksi = Transaksi::whereBetween('tanggal', [$startDate, $endDate])
+            ->whereIn('status_pembayaran', $validStatus)
+            ->latest('tanggal')
+            ->get();
+
+        $pdf = Pdf::loadView('owner.laporan.pdf_keuangan', compact(
+            'startDate', 'endDate', 'pendapatanTotal', 'totalTransaksi', 'rataRataTransaksi', 'riwayatTransaksi'
+        ));
+
+        return $pdf->download('Laporan_Keuangan_Tastivo_' . now()->format('YmdHis') . '.pdf');
     }
 
     public function stok(Request $request) {
