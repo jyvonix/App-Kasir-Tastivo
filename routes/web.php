@@ -39,7 +39,8 @@ Route::get('/clear-all', function() {
     Artisan::call('cache:clear');
     Artisan::call('config:clear');
     Artisan::call('view:clear');
-    return "Semua cache berhasil dihapus!";
+    Artisan::call('package:discover');
+    return "Semua cache dan package manifest berhasil diperbarui!";
 });
 
 Route::get('/', function () {

@@ -3,7 +3,7 @@
 <head>
     <title>Laporan Keuangan Tastivo</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        body { font-family: sans-serif; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .header { text-align: center; margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #FF4500; }
         .header h1 { color: #FF4500; margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
         .header p { margin: 5px 0; color: #666; font-size: 12px; }
