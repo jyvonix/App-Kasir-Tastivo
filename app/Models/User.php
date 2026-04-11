@@ -51,6 +51,14 @@ class User extends Authenticatable
         return $this->belongsTo(Shift::class, 'shift_id');
     }
 
+    /**
+     * Relasi ke Transaksi (Untuk cek riwayat penjualan)
+     */
+    public function transaksis()
+    {
+        return $this->hasMany(Transaksi::class, 'user_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | FITUR PREMIUM: ACCESSOR (Otomatisasi Foto)

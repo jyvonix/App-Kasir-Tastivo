@@ -50,6 +50,22 @@ Route::get('/', function () {
 // ====================================================
 // GROUP 1: AUTH UMUM
 // ====================================================
+// Route perbaikan database (Bedah Plastik Khusus Tabel Kategori)
+Route::get('/fix-database', function() {
+    try {
+        // Cek apakah kolom 'deskripsi' sudah ada di tabel 'kategori'
+        if (!Schema::hasColumn('kategori', 'deskripsi')) {
+            // Jika belum ada, paksa tambah lewat SQL mentah agar lebih stabil
+            DB::statement("ALTER TABLE kategori ADD COLUMN deskripsi TEXT NULL AFTER nama_kategori");
+            return "BERHASIL! Kolom 'deskripsi' sudah dipaksa masuk ke tabel kategori. Silakan coba edit lagi.";
+        } else {
+            return "Kolom 'deskripsi' sebenarnya sudah ada di database. Mungkin ada masalah lain?";
+        }
+    } catch (\Exception $e) {
+        return "Gagal sinkronisasi: " . $e->getMessage();
+    }
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -72,7 +88,13 @@ Route::middleware('auth')->group(function () {
 // ====================================================
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('pegawai', PegawaiController::class);
-    Route::resource('kategori', \App\Http\Controllers\KategoriController::class);
+    
+    // Rute Kategori Manual (Lebih Stabil)
+    Route::get('/kategori', [\App\Http\Controllers\KategoriController::class, 'index'])->name('kategori.index');
+    Route::post('/kategori', [\App\Http\Controllers\KategoriController::class, 'store'])->name('kategori.store');
+    Route::put('/kategori/{id}', [\App\Http\Controllers\KategoriController::class, 'update'])->name('kategori.update');
+    Route::delete('/kategori/{id}', [\App\Http\Controllers\KategoriController::class, 'destroy'])->name('kategori.destroy');
+
     Route::resource('shifts', \App\Http\Controllers\ShiftController::class);
     Route::get('/pegawai/card/{id}', [App\Http\Controllers\AttendanceController::class, 'card'])->name('pegawai.card');
     

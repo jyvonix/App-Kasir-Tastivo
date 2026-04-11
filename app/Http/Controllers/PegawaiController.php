@@ -189,12 +189,34 @@ class PegawaiController extends Controller
     {
         $pegawai = User::findOrFail($id);
         
+        // Hapus file foto jika ada
         if ($pegawai->foto && Storage::disk('public')->exists($pegawai->foto)) {
             Storage::disk('public')->delete($pegawai->foto);
         }
-        $pegawai->delete();
+        
+        // --- LOGIKA SMART DELETE ---
+        // Cek apakah pegawai ini sudah pernah melakukan transaksi atau punya absensi/izin
+        // (Kita bisa tambahkan pengecekan relasi lainnya di sini nanti)
+        $hasTransactions = $pegawai->transaksis()->exists();
+        
+        if (!$hasTransactions) {
+            // Jika BERSIH (Belum ada transaksi), hapus permanen
+            $pegawai->forceDelete();
+            $message = 'Pegawai berhasil dihapus secara permanen.';
+        } else {
+            // Jika SUDAH ADA TRANSAKSI, kita tidak boleh Hard Delete (akan error MySQL)
+            // Jadi kita RENAME usernamenya agar username aslinya bisa dipakai lagi.
+            $oldUsername = $pegawai->username;
+            $pegawai->username = $oldUsername . '_deleted_' . now()->format('YmdHis');
+            $pegawai->email = $pegawai->username . '@tastivo.local';
+            $pegawai->save();
+            
+            // Lakukan Soft Delete (Hanya sembunyikan dari dashboard)
+            $pegawai->delete();
+            $message = "Pegawai '{$oldUsername}' berhasil dinonaktifkan. Usernamenya sekarang bebas digunakan kembali.";
+        }
 
-        return redirect()->route('pegawai.index')->with('success', 'Pegawai berhasil dihapus permanen.');
+        return redirect()->route('pegawai.index')->with('success', $message);
     }
 
     public function cetakKartu(string $id)

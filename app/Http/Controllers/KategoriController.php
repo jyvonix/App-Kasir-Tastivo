@@ -34,9 +34,18 @@ class KategoriController extends Controller
             'deskripsi' => 'nullable|string'
         ]);
 
-        $kategori->update($request->all());
+        // Gunakan update dengan data yang sudah divalidasi
+        $kategori->update($request->only(['nama_kategori', 'deskripsi']));
 
-        return redirect()->back()->with('success', 'Kategori berhasil diperbarui!');
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil diperbarui!');
+    }
+
+    /**
+     * Fungsi pengaman jika rute show terpanggil tidak sengaja
+     */
+    public function show($id)
+    {
+        return redirect()->route('kategori.index');
     }
 
     public function destroy($id)
