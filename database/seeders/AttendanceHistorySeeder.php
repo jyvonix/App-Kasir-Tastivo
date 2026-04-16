@@ -13,123 +13,130 @@ class AttendanceHistorySeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * LOGIKA PROFESIONAL: Simulasi 1 Tahun Absensi
+     * LOGIKA SUPER PROFESIONAL: Sinkronisasi dengan Waktu Sekarang
      */
     public function run(): void
     {
-        // 1. Bersihkan tabel absensi lama agar tidak duplikat
+        // 1. Bersihkan tabel
         DB::table('attendances')->truncate();
 
-        // 2. Ambil semua pegawai yang punya shift (kecuali owner)
         $employees = User::where('role', '!=', 'owner')->whereNotNull('shift_id')->get();
         
         if ($employees->isEmpty()) {
-            $this->command->warn('Peringatan: Tidak ada pegawai dengan shift_id. Silakan jalankan UserSeeder & ShiftSeeder dulu.');
+            $this->command->warn('Peringatan: Tidak ada pegawai dengan shift_id.');
             return;
         }
 
-        $this->command->info('Memulai simulasi absensi 1 tahun untuk ' . $employees->count() . ' pegawai...');
-
-        // 3. Konfigurasi Waktu (1 Tahun ke belakang)
-        $startDate = Carbon::now()->subYear();
-        $endDate = Carbon::now();
+        $now = Carbon::now();
+        $startDate = $now->copy()->subYear();
         
-        // Kita gunakan Progress Bar agar lebih profesional di CLI
-        $totalDays = $startDate->diffInDays($endDate);
+        $this->command->info('Menghasilkan riwayat absensi 1 tahun (Sinkron dengan waktu sekarang)...');
+        $totalDays = $startDate->diffInDays($now);
         $bar = $this->command->getOutput()->createProgressBar($totalDays);
         $bar->start();
 
-        // 4. Iterasi Hari demi Hari
-        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+        // 2. Iterasi Hari demi Hari
+        for ($date = $startDate->copy(); $date->lte($now); $date->addDay()) {
             
-            // Opsional: Misal hari Minggu libur (tidak ada absensi)
-            // if ($date->isSunday()) { $bar->advance(); continue; }
-
             foreach ($employees as $employee) {
                 $shift = $employee->shift;
                 
-                // --- LOGIKA VARIASI KEHADIRAN (PROFESIONAL) ---
-                $chance = rand(1, 100);
-
-                // 85% HADIR / TELAT
-                if ($chance <= 85) {
-                    $this->createHadirAtauTelat($employee, $shift, $date);
-                } 
-                // 10% IZIN / SAKIT
-                elseif ($chance <= 95) {
-                    $this->createIzinAtauSakit($employee, $date);
+                // Jika hari ini, gunakan logika "Live"
+                if ($date->isToday()) {
+                    $this->createLiveAttendanceToday($employee, $shift, $now);
+                } else {
+                    // Logika history acak untuk hari-hari sebelumnya
+                    $chance = rand(1, 100);
+                    if ($chance <= 90) { // 90% hadir di masa lalu
+                        $this->createPastAttendance($employee, $shift, $date);
+                    } elseif ($chance <= 97) {
+                        $this->createPastIzin($employee, $date);
+                    }
                 }
-                // 5% ALPHA (Tidak ada record absensi hari itu)
             }
             $bar->advance();
         }
 
         $bar->finish();
-        $this->command->info("\nSimulasi selesai! Sejarah absensi 1 tahun berhasil dibuat.");
+        $this->command->info("\nBerhasil! Data hari ini telah disinkronkan dengan waktu sekarang: " . $now->format('H:i:s'));
     }
 
     /**
-     * Logika Simulasi Kehadiran Normal/Telat
+     * Logika untuk Hari Ini (Live Feel)
      */
-    private function createHadirAtauTelat($user, $shift, $date)
+    private function createLiveAttendanceToday($user, $shift, $now)
+    {
+        $jamMasukShift = Carbon::parse($now->format('Y-m-d') . ' ' . $shift->jam_masuk);
+        $jamPulangShift = Carbon::parse($now->format('Y-m-d') . ' ' . $shift->jam_pulang);
+
+        // Kasus A: Waktu sekarang sudah melewati jam masuk shift
+        if ($now->greaterThan($jamMasukShift)) {
+            
+            // Simulasi dia sudah masuk (misal 5 menit sebelum shift atau pas shift mulai)
+            $waktuMasuk = $jamMasukShift->copy()->subMinutes(rand(0, 10));
+            
+            $status = 'hadir';
+            $keterangan = 'Hadir Tepat Waktu (Live)';
+
+            // Jika sekarang sudah lewat jam pulang, isi juga jam pulangnya
+            $waktuPulang = null;
+            if ($now->greaterThan($jamPulangShift)) {
+                $waktuPulang = $jamPulangShift->copy()->addMinutes(rand(5, 20));
+            }
+
+            Attendance::create([
+                'user_id' => $user->id,
+                'shift_id' => $shift->id,
+                'tanggal' => $now->format('Y-m-d'),
+                'waktu_masuk' => $waktuMasuk->format('H:i:s'),
+                'waktu_pulang' => $waktuPulang ? $waktuPulang->format('H:i:s') : null,
+                'status' => $status,
+                'keterangan' => $keterangan,
+                'created_at' => $waktuMasuk,
+                'updated_at' => $waktuPulang ?? $now,
+            ]);
+        }
+    }
+
+    /**
+     * Logika untuk Hari-hari Kemarin
+     */
+    private function createPastAttendance($user, $shift, $date)
     {
         $jamMasukShift = Carbon::parse($date->format('Y-m-d') . ' ' . $shift->jam_masuk);
         $jamPulangShift = Carbon::parse($date->format('Y-m-d') . ' ' . $shift->jam_pulang);
 
-        // Simulasi datang antara 30 menit sebelum s/d 45 menit sesudah shift mulai
-        // (Random agar ada yang telat dan ada yang rajin)
-        $offsetMasuk = rand(-30, 45);
-        $waktuMasukActual = $jamMasukShift->copy()->addMinutes($offsetMasuk);
+        $offset = rand(-15, 45); // Variasi telat atau awal
+        $waktuMasuk = $jamMasukShift->copy()->addMinutes($offset);
+        
+        $status = ($offset > 15) ? 'telat' : 'hadir';
+        $keterangan = ($status == 'telat') ? "Terlambat {$offset} menit." : "Tepat waktu.";
 
-        // Tentukan Status (Toleransi 15 Menit)
-        $status = 'hadir';
-        $keterangan = 'Hadir Tepat Waktu';
-
-        if ($offsetMasuk > 15) {
-            $status = 'telat';
-            $keterangan = "Terlambat {$offsetMasuk} menit karena alasan lalu lintas/pribadi.";
-        } elseif ($offsetMasuk < 0) {
-            $keterangan = "Hadir lebih awal " . abs($offsetMasuk) . " menit.";
-        }
-
-        // Simulasi Pulang (Selalu setelah jam pulang shift, antara 5 - 60 menit lembur tipis-tipis)
-        $offsetPulang = rand(5, 60);
-        $waktuPulangActual = $jamPulangShift->copy()->addMinutes($offsetPulang);
+        $waktuPulang = $jamPulangShift->copy()->addMinutes(rand(5, 30));
 
         Attendance::create([
             'user_id' => $user->id,
             'shift_id' => $shift->id,
             'tanggal' => $date->format('Y-m-d'),
-            'waktu_masuk' => $waktuMasukActual->format('H:i:s'),
-            'waktu_pulang' => $waktuPulangActual->format('H:i:s'),
+            'waktu_masuk' => $waktuMasuk->format('H:i:s'),
+            'waktu_pulang' => $waktuPulang->format('H:i:s'),
             'status' => $status,
             'keterangan' => $keterangan,
-            'created_at' => $date->copy()->setTime(8, 0), // Dibuat pagi hari simulasi
-            'updated_at' => $date->copy()->setTime(17, 0), // Diupdate sore hari simulasi
+            'created_at' => $waktuMasuk,
+            'updated_at' => $waktuPulang,
         ]);
     }
 
-    /**
-     * Logika Simulasi Izin / Sakit
-     */
-    private function createIzinAtauSakit($user, $date)
+    private function createPastIzin($user, $date)
     {
-        $isSakit = rand(0, 1);
-        $status = $isSakit ? 'sakit' : 'izin';
-        
-        $keteranganSakit = ['Demam tinggi', 'Flu berat', 'Sakit kepala/Migrain', 'Izin ke Dokter'];
-        $keteranganIzin  = ['Urusan keluarga mendadak', 'Ada keperluan di bank', 'Acara keluarga', 'Perbaikan kendaraan'];
-
+        $status = rand(0, 1) ? 'sakit' : 'izin';
         Attendance::create([
             'user_id' => $user->id,
             'shift_id' => $user->shift_id,
             'tanggal' => $date->format('Y-m-d'),
-            'waktu_masuk' => null,
-            'waktu_pulang' => null,
             'status' => $status,
-            'keterangan' => $isSakit ? $keteranganSakit[array_rand($keteranganSakit)] : $keteranganIzin[array_rand($keteranganIzin)],
-            'bukti_foto' => 'bukti_izin/dummy_proof.jpg', // Simulasi path foto
-            'created_at' => $date->copy()->setTime(7, 30),
+            'keterangan' => "Izin $status di masa lalu.",
+            'created_at' => $date->copy()->setTime(7, 0, 0),
         ]);
     }
 }
