@@ -216,15 +216,42 @@ class AttendanceController extends Controller
         return redirect()->route('dashboard')->with('success', 'Pengajuan Izin/Sakit berhasil dikirim.');
     }
 
-    // --- MONITORING ---
-    public function monitoring()
+    // --- MONITORING & HISTORY (UPGRADED FOR OWNER) ---
+    public function monitoring(Request $request)
     {
-        $today = Carbon::today();
-        $logs = Attendance::with(['user', 'shift'])
-            ->whereDate('tanggal', $today)
-            ->latest('updated_at')
-            ->get();
+        $query = Attendance::with(['user', 'shift']);
 
-        return view('attendance.monitoring', compact('logs'));
+        // --- FILTER LOGIC ---
+        // Filter Tanggal (Default: Hari Ini jika tidak ada filter)
+        $startDate = $request->get('start_date') ?? Carbon::today()->format('Y-m-d');
+        $endDate = $request->get('end_date') ?? Carbon::today()->format('Y-m-d');
+        
+        $query->whereBetween('tanggal', [$startDate, $endDate]);
+
+        // Filter Pegawai
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Filter Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Ambil Data Logs
+        $logs = $query->latest('tanggal')->latest('waktu_masuk')->get();
+
+        // --- ANALYTICS SUMMARY ---
+        $stats = [
+            'total' => $logs->count(),
+            'hadir' => $logs->where('status', 'hadir')->count(),
+            'telat' => $logs->where('status', 'telat')->count(),
+            'izin'  => $logs->whereIn('status', ['izin', 'sakit'])->count(),
+        ];
+
+        // Ambil Daftar Pegawai untuk Dropdown Filter
+        $employees = User::where('role', '!=', 'owner')->orderBy('nama')->get();
+
+        return view('attendance.monitoring', compact('logs', 'stats', 'employees', 'startDate', 'endDate'));
     }
 }

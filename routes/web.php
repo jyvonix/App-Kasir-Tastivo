@@ -152,10 +152,13 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ====================================================
-// GROUP 5: MONITORING
+// GROUP 5: MONITORING & HISTORY (OWNER & ADMIN)
 // ====================================================
-Route::middleware(['auth', 'role:admin,owner,kasir'])->group(function () {
+Route::middleware(['auth', 'role:admin,owner'])->group(function () {
     Route::get('/attendance/monitoring', [App\Http\Controllers\AttendanceController::class, 'monitoring'])->name('attendance.monitoring');
+});
+
+Route::middleware(['auth', 'role:admin,owner,kasir'])->group(function () {
     Route::get('/transaksi/riwayat', [TransaksiController::class, 'riwayat'])->name('transaksi.riwayat');
     Route::get('/transaksi/{id}', [TransaksiController::class, 'show'])->name('transaksi.show');
 });
