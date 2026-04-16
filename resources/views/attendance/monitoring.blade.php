@@ -179,10 +179,16 @@
                     </select>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-3 rounded-2xl shadow-lg shadow-orange-100 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                    <button type="submit" class="flex-1 bg-gray-900 hover:bg-black text-white font-black py-3 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         Filter
                     </button>
+                    
+                    <button type="button" onclick="exportToPdf()" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-3 rounded-2xl shadow-lg shadow-orange-100 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        PDF
+                    </button>
+
                     <a href="{{ route('attendance.monitoring') }}" class="p-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl transition-all" title="Reset Filter">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </a>
@@ -331,6 +337,12 @@
     </div>
 
     <script>
+        function exportToPdf() {
+            const form = document.querySelector('form');
+            const urlParams = new URLSearchParams(new FormData(form)).toString();
+            window.location.href = "{{ route('attendance.export_pdf') }}?" + urlParams;
+        }
+
         function showProofModal(src, name) {
             document.getElementById('proofImage').src = src;
             document.getElementById('modalEmployeeName').innerText = name;

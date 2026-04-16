@@ -156,6 +156,7 @@ Route::middleware(['auth'])->group(function () {
 // ====================================================
 Route::middleware(['auth', 'role:admin,owner'])->group(function () {
     Route::get('/attendance/monitoring', [App\Http\Controllers\AttendanceController::class, 'monitoring'])->name('attendance.monitoring');
+    Route::get('/attendance/export-pdf', [App\Http\Controllers\AttendanceController::class, 'exportPdf'])->name('attendance.export_pdf');
 });
 
 Route::middleware(['auth', 'role:admin,owner,kasir'])->group(function () {
