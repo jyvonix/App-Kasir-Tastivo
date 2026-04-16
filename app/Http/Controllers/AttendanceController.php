@@ -90,7 +90,9 @@ class AttendanceController extends Controller
             $jamMasuk = Carbon::parse($today->format('Y-m-d') . ' ' . $shift->jam_masuk);
             
             // 1. Cek Batas Awal Absen (Jangan terlalu pagi)
-            $batasAwal = $jamMasuk->copy()->subMinutes($settings->jam_masuk_awal ?? 60);
+            // Fix: Cast string values from DB to integers for Carbon compatibility on hosting environments
+            $jamMasukAwal = (int) ($settings->jam_masuk_awal ?? 60);
+            $batasAwal = $jamMasuk->copy()->subMinutes($jamMasukAwal);
             
             if ($now->lessThan($batasAwal)) {
                 $selisih = $now->diffInMinutes($batasAwal);
@@ -101,8 +103,9 @@ class AttendanceController extends Controller
             }
 
             // 2. Tentukan Status (Tepat Waktu / Telat)
-            // Toleransi misal 15 menit
-            $batasTelat = $jamMasuk->copy()->addMinutes($settings->toleransi_keterlambatan ?? 15);
+            // Fix: Cast string values from DB to integers for Carbon compatibility on hosting environments
+            $toleransi = (int) ($settings->toleransi_keterlambatan ?? 15);
+            $batasTelat = $jamMasuk->copy()->addMinutes($toleransi);
             $status = 'hadir';
             $keterangan = 'Tepat Waktu';
 
