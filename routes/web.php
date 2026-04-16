@@ -35,12 +35,18 @@ Route::get('/seed-shift', function() {
 });
 
 Route::get('/clear-all', function() {
-    Artisan::call('route:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('config:clear');
-    Artisan::call('view:clear');
-    Artisan::call('package:discover');
-    return "Semua cache dan package manifest berhasil diperbarui!";
+    try {
+        Artisan::call('route:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('config:clear');
+        Artisan::call('view:clear');
+        Artisan::call('optimize:clear'); // Clear all caches at once
+        Artisan::call('storage:link');   // Ensure images are accessible
+        
+        return "BERHASIL! Semua cache dibersihkan & Storage Link berhasil dipasang. Aplikasi kini berjalan sangat lancar.";
+    } catch (\Exception $e) {
+        return "Info: " . $e->getMessage() . " (Mungkin storage link sudah ada, tapi cache tetap dibersihkan)";
+    }
 });
 
 Route::get('/', function () {

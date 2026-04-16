@@ -63,16 +63,23 @@ class DashboardController extends Controller
             $izinCount = $attendanceToday->whereIn('status', ['izin', 'sakit'])->count();
             $alphaCount = max(0, $totalPegawai - ($hadirCount + $telatCount + $izinCount));
 
-            // 4. Grafik Penjualan (7 Hari Terakhir)
+            // 4. Grafik Penjualan (7 Hari Terakhir) - OPTIMIZED: 1 Query vs 7 Queries
             $chartLabels = [];
             $chartData = [];
+            
+            $sevenDaysAgo = Carbon::now()->subDays(6)->startOfDay();
+            $dailySales = Transaksi::where('tanggal', '>=', $sevenDaysAgo)
+                ->whereIn('status_pembayaran', $validStatus)
+                ->select(DB::raw('DATE(tanggal) as date'), DB::raw('SUM(total_harga) as total'))
+                ->groupBy('date')
+                ->get()
+                ->pluck('total', 'date');
+
             for ($i = 6; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                $chartLabels[] = $date->format('d M');
-                $dailySum = Transaksi::whereDate('tanggal', $date)
-                    ->whereIn('status_pembayaran', $validStatus)
-                    ->sum('total_harga');
-                $chartData[] = $dailySum;
+                $date = Carbon::now()->subDays($i)->format('Y-m-d');
+                $label = Carbon::now()->subDays($i)->format('d M');
+                $chartLabels[] = $label;
+                $chartData[] = (float) ($dailySales[$date] ?? 0);
             }
 
             return view('owner.dashboard', compact(
